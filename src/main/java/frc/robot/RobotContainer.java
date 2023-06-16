@@ -21,7 +21,6 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 
 public class RobotContainer {
-  //test 
   public static SwerveSubsystem swerveSubsystem = new SwerveSubsystem();
   public static ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
   public static PivotSubsystem pivotSubsystem = new PivotSubsystem();
