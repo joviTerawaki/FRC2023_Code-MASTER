@@ -116,8 +116,8 @@ public class RobotContainer {
   public void createAutoBuilder() {
     //create event map 
     HashMap<String, Command> eventMap = new HashMap<>();
-    eventMap.put("Marker 1", new PrintCommand("reached M1"));
-    eventMap.put("Marker 2", new PrintCommand("reached M2"));
+    eventMap.put("Marker 1", new InstantCommand(() -> SmartDashboard.putString("Auto Marker", "1")));
+    eventMap.put("Marker 2", new InstantCommand(() -> SmartDashboard.putString("Auto Marker", "2")));
 
     //uses calling by reference 
     SwerveAutoBuilder autoBuilder = new SwerveAutoBuilder(
