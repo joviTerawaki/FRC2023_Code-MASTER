@@ -11,8 +11,12 @@ import frc.robot.commands.PivotCommands.*;
 import frc.robot.commands.LED_Commands.*;
 import frc.robot.subsystems.*;
 
+import java.nio.file.Path;
 import java.util.HashMap;
-
+import java.util.List;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.PathConstraints;
+import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.auto.PIDConstants;
 import com.pathplanner.lib.auto.SwerveAutoBuilder;
 
@@ -37,6 +41,7 @@ public class RobotContainer {
   private XboxController xbox = new XboxController(DriverControlConsts.XBOX_CONTROLLER_PORT);
   private Joystick joystick = new Joystick(DriverControlConsts.JOYSTICK_PORT);
 
+  SwerveAutoBuilder autoBuilder; 
   HashMap<String, Command> eventMap = new HashMap<>();
 
   //AUTONOMOUS CHOICES 
@@ -48,6 +53,8 @@ public class RobotContainer {
   private Command blueHighBalEnc = new BlueHighBalEnc(swerveSubsystem, clawSubsystem, pivotSubsystem, elevatorSubsystem);
   private Command mixedBalance = new MixedBalance(swerveSubsystem);
   private Command swerveLock = new Lock(swerveSubsystem);
+  private Command linePath; 
+  private Command S_Path; 
   public SendableChooser<Command> autoChooser = new SendableChooser<>();
 
   public RobotContainer() {
@@ -111,16 +118,29 @@ public class RobotContainer {
     new JoystickButton(joystick, 6).toggleOnTrue(new Yellow(lights));
     new JoystickButton(joystick, 4).toggleOnTrue(new Violet(lights));
 
+    /* PATH PLANNER */
+    generatePathPlannerGroups();
+    createAutoBuilder();
+
   }
 
-  public void createAutoBuilder() {
+  public Command getAutonomousCommand() {
+    return autoChooser.getSelected();
+  }
+
+  /* AUTO BUILDER */
+  //create the AutoBuilder obj and event map 
+  private void createAutoBuilder() {
     //create event map 
     HashMap<String, Command> eventMap = new HashMap<>();
+
+    //adding event markers to the eventMap
     eventMap.put("Marker 1", new InstantCommand(() -> SmartDashboard.putString("Auto Marker", "1")));
     eventMap.put("Marker 2", new InstantCommand(() -> SmartDashboard.putString("Auto Marker", "2")));
 
     //uses calling by reference 
-    SwerveAutoBuilder autoBuilder = new SwerveAutoBuilder(
+    //PIDs are currently 0
+    autoBuilder = new SwerveAutoBuilder(
       swerveSubsystem::getPose, //Pose2d 
       swerveSubsystem::resetOdometry, //reset Pose 
       SwerveConsts.DRIVE_KINEMATICS, //drive translations (kinematics)
@@ -130,8 +150,18 @@ public class RobotContainer {
       eventMap);
   }
 
-  public Command getAutonomousCommand() {
-    return autoChooser.getSelected();
+  /* PATH PLANNER TRAJECTORIES */
+  //generate PathPlanner groups and add them to the auto chooser 
+  private void generatePathPlannerGroups() {
+    //PATH CONSTRAINTS ARE NOT CORRECT 
+    //loads paths from PP and generates trajectories 
+    List<PathPlannerTrajectory> testLinePath = PathPlanner.loadPathGroup("LinePath", new PathConstraints(2, 2));  
+    List<PathPlannerTrajectory> testSPath = PathPlanner.loadPathGroup("S_Path", new PathConstraints(2, 2)); 
+
+    //translating the PathPlannerTrajectories into Commands 
+    linePath = autoBuilder.fullAuto(testLinePath);
+    S_Path = autoBuilder.fullAuto(testSPath);
+
   }
 
   public Command getSwerveLock(){
@@ -146,6 +176,8 @@ public class RobotContainer {
     autoChooser.addOption("Blue High Balance", blueHighBalEnc);
     autoChooser.addOption("High ONLY", high);
     autoChooser.addOption("Mixed Balance ONLY", mixedBalance);
+    autoChooser.addOption("Line Path", linePath);
+    autoChooser.addOption("S Path", S_Path);
 
     SmartDashboard.putData(autoChooser);
   }
