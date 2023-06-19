@@ -1,6 +1,7 @@
 package frc.robot;
 
 import frc.robot.Constants.DriverControlConsts;
+import frc.robot.Constants.SwerveConsts;
 import frc.robot.commands.AutonomousCommands.*;
 import frc.robot.commands.ClawCommands.*;
 import frc.robot.commands.CommandGroups.*;
@@ -10,6 +11,9 @@ import frc.robot.commands.PivotCommands.*;
 import frc.robot.commands.LED_Commands.*;
 import frc.robot.subsystems.*;
 
+import java.util.HashMap;
+
+import com.pathplanner.lib.auto.PIDConstants;
 import com.pathplanner.lib.auto.SwerveAutoBuilder;
 
 import edu.wpi.first.wpilibj.Joystick;
@@ -19,6 +23,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 
@@ -31,6 +36,8 @@ public class RobotContainer {
 
   private XboxController xbox = new XboxController(DriverControlConsts.XBOX_CONTROLLER_PORT);
   private Joystick joystick = new Joystick(DriverControlConsts.JOYSTICK_PORT);
+
+  HashMap<String, Command> eventMap = new HashMap<>();
 
   //AUTONOMOUS CHOICES 
   private Command highMobility = new HighMobility(swerveSubsystem, clawSubsystem, pivotSubsystem, elevatorSubsystem);
@@ -107,7 +114,20 @@ public class RobotContainer {
   }
 
   public void createAutoBuilder() {
-    SwerveAutoBuilder autoBuilder = new SwerveAutoBuilder(null, null, null, null, null, null, null);
+    //create event map 
+    HashMap<String, Command> eventMap = new HashMap<>();
+    eventMap.put("Marker 1", new PrintCommand("reached M1"));
+    eventMap.put("Marker 2", new PrintCommand("reached M2"));
+
+    //uses calling by reference 
+    SwerveAutoBuilder autoBuilder = new SwerveAutoBuilder(
+      swerveSubsystem::getPose, //Pose2d 
+      swerveSubsystem::resetOdometry, //reset Pose 
+      SwerveConsts.DRIVE_KINEMATICS, //drive translations (kinematics)
+      new PIDConstants(SwerveConsts.kP_XY, 0, 0), //translational PID 
+      new PIDConstants(SwerveConsts.kP_THETA, 0, 0), //rotational PID 
+      swerveSubsystem::setModuleStates, //swerve states 
+      eventMap);
   }
 
   public Command getAutonomousCommand() {

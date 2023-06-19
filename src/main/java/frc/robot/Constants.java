@@ -74,6 +74,8 @@ public final class Constants {
     public static final double KP_TURNING = 0.5;
     public static final double KI_TURNING = 0.0;
     public static final double KD_TURNING = 0.0025;
+    public static final double kP_XY = 0.0;
+    public static final double kP_THETA = 0.0;
   }
 
   public static class LandingGearConsts{
