@@ -4,9 +4,12 @@ import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -26,6 +29,9 @@ public class SwerveSubsystem extends SubsystemBase {
 
     private AHRS navx;
 
+    private SwerveModulePosition[] positions;
+    private SwerveDriveOdometry odometer;
+
     private DoubleSolenoid landinator;
     private CANSparkMax wheelinator;
 
@@ -43,6 +49,19 @@ public class SwerveSubsystem extends SubsystemBase {
                 SwerveConsts.FR_ABSOLUTE_ENCODER_PORT, SwerveConsts.FR_OFFSET, false, true, true);
 
         navx = new AHRS(SPI.Port.kMXP);
+
+        // if new positions don't work
+        //positions = new SwerveModulePosition[4];//{frontLeft.getPosition(), backLeft.getPosition(), backRight.getPosition(), frontRight.getPosition()};
+        positions = new SwerveModulePosition[]{
+            frontLeft.getPosition(), backLeft.getPosition(), backRight.getPosition(), frontRight.getPosition()
+        };
+        // positions[0] = new SwerveModulePosition(0, new Rotation2d(frontLeft.getTurningPosition()));
+        // positions[1] = new SwerveModulePosition(0, new Rotation2d(backLeft.getTurningPosition()));
+        // positions[2] = new SwerveModulePosition(0, new Rotation2d(backRight.getTurningPosition()));
+        // positions[3] = new SwerveModulePosition(0, new Rotation2d(frontRight.getTurningPosition()));
+
+        odometer = new SwerveDriveOdometry(SwerveConsts.DRIVE_KINEMATICS, getRotation2d(), positions);
+
 
         /* * * Landing Gear * * */
         landinator = new DoubleSolenoid(PneumaticsModuleType.REVPH,
@@ -228,8 +247,26 @@ public class SwerveSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         SmartDashboard.putNumber("[S] Yaw", getYaw());
-        SmartDashboard.putBoolean("connection", navx.isConnected());
         SmartDashboard.putNumber("[S] Pitch", getPitch());
         SmartDashboard.putNumber("[S] Timer Class", Timer.getMatchTime());
+
+        SmartDashboard.putString("Robot Location",  getPose().getTranslation().toString());
+        SmartDashboard.putString("Robot Rotation",  getPose().getRotation().toString());
+
+
+        odometer.update(getRotation2d(), new SwerveModulePosition[] {
+            frontLeft.getPosition(), backLeft.getPosition(), backRight.getPosition(), frontRight.getPosition()
+        });
+    }
+
+    // ODOMETRY
+
+    // Pose2d = Translation2D + Rotation 2D
+    public Pose2d getPose(){
+        return odometer.getPoseMeters();
+    }
+
+    public void resetOdometry(Pose2d pose){
+        odometer.resetPosition(getRotation2d(), positions, pose);
     }
 }

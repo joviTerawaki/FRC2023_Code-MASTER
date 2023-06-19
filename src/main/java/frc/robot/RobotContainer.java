@@ -10,6 +10,8 @@ import frc.robot.commands.PivotCommands.*;
 import frc.robot.commands.LED_Commands.*;
 import frc.robot.subsystems.*;
 
+import com.pathplanner.lib.auto.SwerveAutoBuilder;
+
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -102,6 +104,10 @@ public class RobotContainer {
     new JoystickButton(joystick, 6).toggleOnTrue(new Yellow(lights));
     new JoystickButton(joystick, 4).toggleOnTrue(new Violet(lights));
 
+  }
+
+  public void createAutoBuilder() {
+    SwerveAutoBuilder autoBuilder = new SwerveAutoBuilder(null, null, null, null, null, null, null);
   }
 
   public Command getAutonomousCommand() {
